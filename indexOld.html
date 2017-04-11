@@ -1,0 +1,299 @@
+<html>
+<head>
+  <title>Sammy</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+  <script type="text/javascript">
+    var accessToken = "3037a799adfe44b1b79671ba2b5cbc25",
+      baseUrl = "https://api.api.ai/v1/",
+      $speechInput,
+      $recBtn,
+      recognition,
+      messageRecording = "Recording...",
+      messageCouldntHear = "I couldn't hear you, could you say that again?",
+      messageInternalError = "Oh no, there has been an internal server error",
+      messageSorry = "I'm sorry, I don't have the answer to that yet but I will use that request to learn more and be prepared for future requested similar to it.";
+    $(document).ready(function() {
+      $speechInput = $("#speech");
+      $recBtn = $("#rec");
+      $userID = makeid();
+      $speechInput.keypress(function(event) {
+        if (event.which == 13) {
+          event.preventDefault();
+          send();
+        }
+      });
+      $recBtn.on("click", function(event) {
+        switchRecognition();
+      });
+      $(".debug__btn").on("click", function() {
+        $(this).next().toggleClass("is-active");
+        return false;
+      });
+    });
+    function makeid()
+    {
+      var text = "";
+      var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+      for( var i=0; i < 5; i++ )
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+      return text;
+    }
+    function startRecognition() {
+      recognition = new webkitSpeechRecognition();
+      recognition.continuous = false;
+          recognition.interimResults = false;
+      recognition.onstart = function(event) {
+        respond(messageRecording);
+        updateRec();
+      };
+      recognition.onresult = function(event) {
+        recognition.onend = null;
+        
+        var text = "";
+          for (var i = event.resultIndex; i < event.results.length; ++i) {
+            text += event.results[i][0].transcript;
+          }
+          setInput(text);
+
+        stopRecognition();
+      };
+      recognition.onend = function() {
+        respond(messageCouldntHear);
+        stopRecognition();
+      };
+      recognition.lang = "en-US";
+      recognition.start();
+    }
+  
+    function stopRecognition() {
+      if (recognition) {
+        recognition.stop();
+        recognition = null;
+      }
+      updateRec();
+    }
+    function switchRecognition() {
+      if (recognition) {
+        stopRecognition();
+      } else {
+        startRecognition();
+      }
+    }
+    function setInput(text) {
+      $speechInput.val(text);
+      send();
+    }
+    function updateRec() {
+      $recBtn.text(recognition ? "Stop" : "Speak");
+    }
+    function send() {
+      var text = $speechInput.val();
+      $('#convo').append("\nYou: "+text+"\n");
+      $('input[type="text"]').val('');
+      scrollToBottom();
+      $.ajax({
+        type: "POST",
+        url: baseUrl + "query",
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        headers: {
+          "Authorization": "Bearer " + accessToken
+        },
+        data: JSON.stringify({query: text, lang: "en", sessionId: $userID}),
+        success: function(data) {
+          prepareResponse(data);
+        },
+        error: function() {
+          respond(messageInternalError);
+        }
+      });
+    }
+    function prepareResponse(val) {
+      var debugJSON = JSON.stringify(val, undefined, 2),
+        spokenResponse = val.result.speech;
+      //respond(spokenResponse);
+      debugRespond(debugJSON);
+      console.log(val.result);
+
+      var intent = val.result.metadata.intentName;
+      console.log(intent);
+      var itemlookup = false;
+      var itemquery;
+      var itematag;
+      if (intent == "item-lookup") {
+        var item = val.result.parameters.product;
+        itemquery = "https://www.samsclub.com/sams/search/searchResults.jsp?searchCategoryId=all&searchTerm="+item;
+
+
+      }
+      itematag
+      respond(spokenResponse+" "+ itemquery);
+/*
+      var contexts = val.result.metadata.contexts;
+      if (contexts.length > 0)
+      {
+        console.log("we have some context:");
+        for ( var x = 0; x <contexts.length; x++) {
+          console.log(contexts[x]);
+          if (contexts[x] == "itemlookup")
+                  itemlookup = true;
+        }
+      }
+      else
+      {
+        console.log("No contexts");
+      }
+*/
+
+
+    }
+    function debugRespond(val) {
+      $("#response").text(val);
+    }
+    function respond(val) {
+      if (val == "") {
+        val = messageSorry;
+      }
+      if (val !== messageRecording) {
+        var msg = new SpeechSynthesisUtterance();
+        msg.voiceURI = "native";
+        msg.text = val;
+        msg.lang = "en-US";
+        window.speechSynthesis.speak(msg);
+      }
+      $('#convo').append("\nSammy: "+val+"\n");
+      scrollToBottom();
+      $("#spokenResponse").addClass("is-active").find(".spoken-response__text").html(val);
+    }
+
+    function scrollToBottom() {
+      $('#convo').scrollTop($('#convo')[0].scrollHeight);
+    }
+  </script>
+  <style type="text/css">
+    html {
+      box-sizing: border-box;
+    }
+    *, *:before, *:after {
+      box-sizing: inherit;
+    }
+    body {
+      background-color: #10370f;
+      font-family: "Titillium Web", Arial, sans-serif;
+      font-size: 20px;
+      margin: auto;
+    }
+    .container {
+      position: fixed;
+      margin:auto;
+      top: 50%;
+      left: 50%;
+      width: 90%;
+      height: 80%;
+      -webkit-transform: translate(-50%, -50%);
+    }
+    input {
+      background-color: #11770f;
+      border: 1px solid #5b9361;
+      color: #cae6cd;
+      font-family: "Titillium Web";
+      font-size: 20px;
+      line-height: 43px;
+      padding: 0 0.75em;
+      width: 85%;
+      -webkit-transition: all 0.35s ease-in;
+    }
+    textarea {
+      background-color: #0c240a;
+      border: 1px solid #133520;
+      color: #86a284;
+      padding: 0.5em;
+      width: 100%;
+      font-size: 20px;
+      -webkit-transition: all 0.35s ease-in;
+    }
+    input:active, input:focus, textarea:active, textarea:focus {
+      outline: 1px solid #598b5b;
+    }
+    .btn {
+      background-color: #237828;
+      border: 1px solid #53af56;
+      color: #53af56;
+      cursor: pointer;
+      display: inline-block;
+      font-family: "Titillium Web";
+      font-size: 20px;
+      line-height: 43px;
+      padding: 0 0.75em;
+      width: 12%;
+      text-align: center;
+      float: right;
+      text-transform: uppercase;
+      -webkit-transition: all 0.35s ease-in;
+    }
+    .btn:hover {
+      background-color: #34a92f;
+      color: #11351b;
+    }
+    .debug {
+      bottom: 0;
+      position: fixed;
+      right: 0;
+    }
+    .debug__content {
+      font-size: 14px;
+      max-height: 0;
+      overflow: hidden;
+      -webkit-transition: all 0.35s ease-in;
+    }
+    .debug__content.is-active {
+      display: block;
+      max-height: 500px;
+    }
+    .debug__btn {
+      width: 100%;
+    }
+    .spoken-response {
+      max-height: 0;
+      overflow: hidden;
+      -webkit-transition: all 0.35s ease-in;
+    }
+    .spoken-response.is-active {
+      max-height: 400px;
+    }
+    .spoken-response__text {
+      background-color: #012306;
+      color: #86a284;
+      padding: 1em;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <textarea id="convo" rows="20" style="resize: none;" readonly>
+*Chat will appear here*
+
+</textarea>
+
+
+    <input id="speech" type="text">
+    <button id="rec" class="btn">Send</button>
+    <!--<div id="spokenResponse" class="spoken-response">
+      <div class="spoken-response__text"></div>
+    </div>-->
+  </div>
+  <!--<div class="debug">
+    <div class="debug__btn btn">
+      Debug JSON results
+    </div>
+    <div class="debug__content">
+      <textarea id="response" cols="40" rows="20"></textarea>
+    </div>
+  </div>-->
+
+  <link href="https://fonts.googleapis.com/css?family=Titillium+Web:200" rel="stylesheet" type="text/css">
+</body>
+</html>

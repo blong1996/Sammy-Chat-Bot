@@ -1,0 +1,348 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Sammy Chatbot | Login</title>
+    <meta charset="UTF-8">
+    <meta name="author" content="Brandon Long">
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
+          integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+            integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="assets/css/main.css">
+
+
+    <script src="https://www.gstatic.com/firebasejs/3.7.1/firebase.js"></script>
+    <script>
+        // Initialize Firebase
+        var config = {
+            apiKey: "AIzaSyByDn2DXFGM1kbAvP5Xl9aWQn7H7J7KOOw",
+            authDomain: "sammy-bot-2.firebaseapp.com",
+            databaseURL: "https://sammy-bot-2.firebaseio.com",
+            storageBucket: "sammy-bot-2.appspot.com",
+            messagingSenderId: "127075181227"
+        };
+        firebase.initializeApp(config);
+    </script>
+    <script src="assets/js/main.js"></script>
+    <!-- FirebaseUI CDN -->
+    <script src="https://cdn.firebase.com/libs/firebaseui/1.0.0/firebaseui.js"></script>
+    <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/1.0.0/firebaseui.css" />
+    <!-- FirebaseUI npm Module -->
+    <script src="node_modules/firebaseui/dist/firebaseui.js"></script>
+    <link type="text/css" rel="stylesheet" href="node_modules/firebaseui/dist/firebaseui.css" />
+    <!-- FirebaseUI Bower Component -->
+    <script src="bower_components/firebaseui/dist/firebaseui.js"></script>
+    <link type="text/css" rel="stylesheet" href="bower_components/firebaseui/dist/firebaseui.css" />
+
+    <script type="text/javascript">
+
+        function toggleDevStuff() {
+            if (document.getElementById('dev-window').style.display == 'none')
+                document.getElementById('dev-window').style.display = 'inline';
+            else
+                document.getElementById('dev-window').style.display = 'none';
+        }
+        /**
+         * Handles the sign in button press.
+         */
+        function toggleSignIn() {
+            if (firebase.auth().currentUser) {
+                // [START signout]
+                firebase.auth().signOut();
+                document.getElementById('quickstart-sign-in').value = 'Sign In';
+                document.getElementById('chat-ui').style.display = 'none';
+                // [END signout]
+            } else {
+                var email = document.getElementById('email').value;
+                var password = document.getElementById('password').value;
+
+                if (email.length < 4) {
+                    alert('Please enter an email address.');
+                    return;
+                }
+                if (password.length < 4) {
+                    alert('Please enter a password.');
+                    return;
+                }
+                // Sign in with email and pass.
+                // [START authwithemail]
+                firebase.auth().signInWithEmailAndPassword(email, password).catch(function(error) {
+                    // Handle Errors here.
+                    var errorCode = error.code;
+                    var errorMessage = error.message;
+                    // [START_EXCLUDE]
+                    if (errorCode === 'auth/wrong-password') {
+                        alert('Wrong password.');
+                    } else {
+                        alert(errorMessage);
+                    }
+                    console.log(error);
+                    document.getElementById('quickstart-sign-in').disabled = false;
+                    // [END_EXCLUDE]
+                });
+                // [END authwithemail]
+
+                document.getElementById('log-in').style.display = 'none';
+                document.getElementById('chat-ui').style.display = 'inline';
+            }
+            document.getElementById('quickstart-sign-in').value = 'Sign Out';
+
+        }
+        /**
+         * Handles the sign up button press.
+         */
+        function handleSignUp() {
+            var email = document.getElementById('email').value;
+            var password = document.getElementById('password').value;
+            if (email.length < 4) {
+                alert('Please enter an email address.');
+                return;
+            }
+            if (password.length < 4) {
+                alert('Please enter a password.');
+                return;
+            }
+            // Sign in with email and pass.
+            // [START createwithemail]
+            firebase.auth().createUserWithEmailAndPassword(email, password).catch(function(error) {
+                // Handle Errors here.
+                var errorCode = error.code;
+                var errorMessage = error.message;
+                // [START_EXCLUDE]
+                if (errorCode == 'auth/weak-password') {
+                    alert('The password is too weak.');
+                } else {
+                    alert(errorMessage);
+                }
+                console.log(error);
+                // [END_EXCLUDE]
+            });
+            createNewUser();
+            document.getElementById('log-in').style.display = 'none';
+            document.getElementById('chat-ui').style.display = 'inline';
+            // [END createwithemail]
+
+        }
+        /**
+         * Sends an email verification to the user.
+         */
+        function sendEmailVerification() {
+            // [START sendemailverification]
+            firebase.auth().currentUser.sendEmailVerification().then(function() {
+                // Email Verification sent!
+                // [START_EXCLUDE]
+                alert('Email Verification Sent!');
+                // [END_EXCLUDE]
+            });
+            // [END sendemailverification]
+        }
+        function sendPasswordReset() {
+            var email = document.getElementById('email').value;
+            // [START sendpasswordemail]
+            firebase.auth().sendPasswordResetEmail(email).then(function() {
+                // Password Reset Email Sent!
+                // [START_EXCLUDE]
+                alert('Password Reset Email Sent!');
+                // [END_EXCLUDE]
+            }).catch(function(error) {
+                // Handle Errors here.
+                var errorCode = error.code;
+                var errorMessage = error.message;
+                // [START_EXCLUDE]
+                if (errorCode == 'auth/invalid-email') {
+                    alert(errorMessage);
+                } else if (errorCode == 'auth/user-not-found') {
+                    alert(errorMessage);
+                }
+                console.log(error);
+                // [END_EXCLUDE]
+            });
+            // [END sendpasswordemail];
+        }
+        /**
+         * initApp handles setting up UI event listeners and registering Firebase auth listeners:
+         *  - firebase.auth().onAuthStateChanged: This listener is called when the user is signed in or
+         *    out, and that is where we update the UI.
+         */
+        function initApp() {
+            // Listening for auth state changes.
+            // [START authstatelistener]
+            firebase.auth().onAuthStateChanged(function(user) {
+                // [START_EXCLUDE silent]
+             //   document.getElementById('quickstart-verify-email').disabled = true;
+                // [END_EXCLUDE]
+                if (user) {
+                    // User is signed in.
+                    var displayName = user.displayName;
+                    var email = user.email;
+                    var emailVerified = user.emailVerified;
+                    var photoURL = user.photoURL;
+                    var isAnonymous = user.isAnonymous;
+                    var uid = user.uid;
+                    var providerData = user.providerData;
+                    // [START_EXCLUDE]
+                    document.getElementById('quickstart-sign-in-status').textContent = 'Signed in';
+                    document.getElementById('quickstart-sign-in').value = 'Sign Out';
+                    document.getElementById('quickstart-sign-in').disabled = false;
+                    document.getElementById('quickstart-account-details').textContent = JSON.stringify(user, null, '  ');
+                    document.getElementById('log-in').style.display = 'none';
+                    document.getElementById('chat-ui').style.display = 'inline';
+                    if (!emailVerified) {
+                       // document.getElementById('quickstart-verify-email').disabled = false;
+                    }
+                    // [END_EXCLUDE]
+                } else {
+                    // User is signed out.
+                    // [START_EXCLUDE]
+                    document.getElementById('quickstart-sign-in-status').textContent = 'Signed out';
+                    document.getElementById('quickstart-sign-in').value = 'Sign In';
+                    document.getElementById('quickstart-account-details').textContent = 'null';
+                    document.getElementById('chat-ui').style.display = 'none';
+                    document.getElementById('log-in').style.display = 'inline';
+                    // [END_EXCLUDE]
+                }
+                // [START_EXCLUDE silent]
+                document.getElementById('quickstart-sign-in').disabled = false;
+                // [END_EXCLUDE]
+            });
+            // [END authstatelistener]
+            document.getElementById('quickstart-sign-in').addEventListener('click', toggleSignIn, false);
+            document.getElementById('quickstart-sign-up').addEventListener('click', handleSignUp, false);
+            document.getElementById('sign-out').addEventListener('click', toggleSignIn, false);
+       //     document.getElementById('quickstart-verify-email').addEventListener('click', sendEmailVerification, false);
+            document.getElementById('quickstart-password-reset').addEventListener('click', sendPasswordReset, false);
+        }
+        window.onload = function() {
+            initApp();
+        };
+    </script>
+
+</head>
+<body>
+<div class="container" >
+
+    <div class="row" style="margin-top:5px">
+        <!--
+            ////////////////////////////////////////
+            //
+            //     LOGIN / REGISTER UI
+            //
+            ////////////////////////////////////////
+            -->
+        <div class="col-xs-12 col-sm-8 col-md-6 col-sm-offset-2 col-md-offset-3">
+
+            <div id="log-in">
+                <form role="form">
+                    <fieldset>
+                        <h2>Sign In or Register for Sammy Below!</h2>
+                        <hr class="colorgraph">
+                        <div class="form-group">
+                            <input type="email" name="email" id="email" class="form-control input-lg" placeholder="Email Address" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="password" name="password" id="password" class="form-control input-lg" placeholder="Password" required>
+                        </div>
+                        <span class="button-checkbox" style="display: none">
+                        <button type="button" class="btn" data-color="info">Remember Me</button>
+                            <input type="checkbox" name="remember_me" id="remember_me" checked="checked" class="hidden">
+                        </span>
+                        <span class="btn btn-link pull-right" id="quickstart-password-reset">Forgot Password?</span>
+                          <span> <a href="chat.html" class="btn btn-link pull-left" >Skip Sign In</a></span>
+
+
+                        <div class="row">
+                            <div class="col-xs-6 col-sm-6 col-md-6">
+                                <input class="btn btn-lg btn-success btn-block" id="quickstart-sign-in" value="Sign In" >
+                            </div>
+                            <div class="col-xs-6 col-sm-6 col-md-6">
+                                <input  class="btn btn-lg btn-primary btn-block" id="quickstart-sign-up" value="Register" >
+                            </div>
+                        </div>
+                        <hr class="colorgraph">
+                    </fieldset>
+                </form>
+            </div>
+        </div>
+        <!--
+        ////////////////////////////////////////
+        //
+        //     SAMMY CHAT UI
+        //
+        ////////////////////////////////////////
+        -->
+        <div class="col-xs-12 col-sm-12 col-md-10 col-lg-10 col-md-offset-1">
+            <div class="panel panel-primary" id="chat-ui" style="display: none">
+                <div class="panel-heading">
+                    <span class="glyphicon glyphicon-comment"></span> Sammy Chat
+                    <div class="btn-group pull-right">
+                        <button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown">
+                            <span class="glyphicon glyphicon-chevron-down"></span>
+                        </button>
+                        <ul class="dropdown-menu slidedown">
+                            <li><a href=""><span class="glyphicon glyphicon-refresh">
+                            </span>Refresh</a></li>
+                          <!--  <li><a href=""><span class="glyphicon glyphicon-ok-sign">
+                            </span>Available</a></li>
+                            <li><a href=""><span class="glyphicon glyphicon-remove">
+                            </span>Busy</a></li>
+                            <li><a href=""><span class="glyphicon glyphicon-time"></span>
+                                Away</a></li>-->
+                            <li class="divider"></li>
+                            <li><a href=""><span class="glyphicon glyphicon-off"></span>
+                                <p id="sign-out">Sign Out</p></a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <ul class="chat" id="convo">
+
+                    </ul>
+                </div>
+                <div class="panel-footer">
+                    <div class="input-group">
+                        <input id="btn-input" type="text" class="form-control input-sm" placeholder="Type your message here..." x-webkit-speech>
+                        <span class="input-group-btn">
+                            <button class="btn btn-warning btn-sm" id="btn-chat">
+                                Send</button>
+                          <!--  <button class="btn btn-warning btn-sm" id="" onclick="itemLookup('apple')">
+                                Search Test</button>-->
+                            <button class="btm btn-warning btn-sm" id="dev-stuff" onclick="toggleDevStuff()">
+                                Dev Stuff
+                            </button>
+                        </span>
+                    </div>
+                </div>
+                <!-- Container where we'll display the user details -->
+                <div class="quickstart-user-details-container" style="display: none" id="dev-window">
+                    Firebase sign-in status: <span id="quickstart-sign-in-status">Unknown</span>
+                    <div>Firebase auth <code>currentUser</code> object value:</div>
+                    <pre><code id="quickstart-account-details">null</code></pre>
+                    JSON Response:
+                    <pre><code id="response">null</code></pre>
+                </div>
+                <!--<div class="json-body">
+                    <h2>JSON:</h2>
+                    <textarea id=""  rows="20"></textarea>
+                    <div id="accpunt-details">
+
+                    </div>
+                </div>-->
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+
+
+
+</html>
