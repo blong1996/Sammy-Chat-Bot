@@ -3,10 +3,6 @@
  */
 
 
-
-
-//var database = firebase.database();
-
 var intent,
     action,
     parameters,
@@ -40,8 +36,6 @@ $(document).ready(function() {
 
 
 
-
-
     $speechInput.keypress(function(event) {
         if (event.which == 13) {
             event.preventDefault();
@@ -59,7 +53,7 @@ $(document).ready(function() {
 
 /**
  *
- * Randomly generates and ID for the current Sammy interaction when there is
+ * Randomly generates an ID for the current Sammy interaction when there is
  * no auth user
  * @returns text : the random user ID
  *
@@ -204,58 +198,6 @@ function send() {
     });
 }
 
-function itemLookup(val) {
-
-    var settings = {
-        "async": true,
-        "crossDomain": true,
-        "url": "http://www.samsclub.com/soa/services/v1/catalogsearch/search?limit=48&searchCategoryId=all&searchTerm=apples",
-        "method": "GET",
-        "headers": {
-            "content-type": "application/json",
-            "existing_user": "True",
-            "wm_svc.name": "sams-api",
-            "wm_consumer.id": "6a9fa980-1ad4-4ce0-89f0-79490bbc7625",
-            "wm_svc.version": "1.0.0",
-            "wm_svc.env": "prod",
-            "wm_qos.correlation_id": "1488418169568",
-            "accept": "application/json",
-            "cache-control": "no-cache",
-            "postman-token": "230a541d-0fb2-15cf-1d65-a8d8fe5f2ae7"
-        }
-    };
-
-    $.ajax(settings).done(function (response) {
-        console.log(response);
-    });
-
-
-    /*$.ajax({
-       type: "GET",
-        url: wmBaseUrl+"catalogsearch/search?limit=12&searchCategoryId=all&searchterm="+val,
-        headers: {
-            "Content-Type": "application/json",
-            "EXISTING_USER": true,
-            "WM_SVC.VERSION": "1.0.0",
-            "WM_CONSUMER.ID": "6a9fa980-1ad4-4ce0-89f0-79490bbc7625",
-            "WM_SVC.NAME": "sams-api",
-            "WM_SVC.ENV": "prod",
-            "WM_QOS.CORRELATION_ID": "1488418169568",
-            "Accept": "application/json",
-            "Cache-Control": "no-cache"
-        },
-            //data: JSON.stringify({query: val, lang: "en", sessionId: $userID}),
-        success: function(result) {
-           console.log(result);
-             prepareResponse(result);
-        },
-        error: function() {
-             respond(messageInternalError);
-        }
-
-    });*/
-
-}
 
 /**
  *
@@ -284,40 +226,6 @@ function prepareResponse(val) {
     } else {
         respond(spokenResponse);
     }
-
-
-
-
-    intent = val.result.metadata.intentName;
-    console.log(intent);
-
-    var itemlookup = false;
-    var itemquery;
-    var itematag;
-    if (intent == "item-lookup") {
-        var item = val.result.parameters.product;
-        itemquery = "https://www.samsclub.com/sams/search/searchResults.jsp?searchCategoryId=all&searchTerm="+item;
-
-
-    }
-
-    /*
-     var contexts = val.result.metadata.contexts;
-     if (contexts.length > 0)
-     {
-     console.log("we have some context:");
-     for ( var x = 0; x <contexts.length; x++) {
-     console.log(contexts[x]);
-     if (contexts[x] == "itemlookup")
-     itemlookup = true;
-     }
-     }
-     else
-     {
-     console.log("No contexts");
-     }
-     */
-
 
 }
 
@@ -441,7 +349,7 @@ function createOrder(user) {
 
             var item  = items[itemKey];
             console.log(item);
-            spokenResponse += item['quantity'] +" "+ item['product']+"</br>";
+            spokenResponse += item['quantity'] +" "+ item['product']+" - $ "+item['price']+" each</br>";
             total += item['price']*item['quantity'];
 
         }
@@ -454,7 +362,6 @@ function createOrder(user) {
                 orderId: newOrderKey
             };
             console.log(newOrder);
-
 
 
             var updates = {};
@@ -675,9 +582,6 @@ function addToCurrentList(val, user) {
 
 }
 
-function removeFromCurrentList(user,val) {
-
-}
 /**
  *
  * debugRespond() fills in the JSON Response window on the html page
