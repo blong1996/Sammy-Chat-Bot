@@ -4,4 +4,4 @@ Sammy is a proof of concept that simulates a bot that could be used for a voice-
 
 This project was completed during my 14-week co-op experience at the Sam's Club Home Office in Bentonville, AR.
 
-This project can be ran in any web browser. User authentication works so when you create an account, it is being stored in Firebase. 
+This project can be ran in any web browser. User authentication works so when an account is created, it is being stored in Firebase. 
